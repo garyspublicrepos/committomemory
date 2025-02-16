@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { format } from 'date-fns'
-import { Calendar as CalendarIcon, Download, Loader2, Copy, Check } from 'lucide-react'
+import { format, startOfDay, endOfDay, subDays } from 'date-fns'
+import { Calendar as CalendarIcon, Download, Loader2, Copy, Check, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
 import {
@@ -26,19 +26,24 @@ import { getUserReflections } from '@/lib/services/reflection'
 import { PushReflection } from '@/types'
 import { toFrontendReflections } from '@/lib/utils'
 
-const DEFAULT_PROMPT = `Below are my coding reflections from a period of time. Please analyze them and provide:
-1. Key themes and patterns in what I've learned
-2. Areas where I've shown growth
-3. Suggestions for areas to focus on next
-4. A brief summary of the technical topics covered`
+const DEFAULT_PROMPT = `Below are my coding reflections and commit messages from a period of time. Please analyze both the reflections and the actual code changes described in commits to provide:
+1. Key themes and patterns in what I've learned and worked on
+2. Areas where I've shown growth based on both reflections and commit patterns
+3. Technical areas I've been focusing on (based on commit messages and reflections)
+4. Suggestions for areas to focus on next
+5. A brief summary of the technical topics covered`
 
 interface ShareLearningsDialogProps {
   userId: string
 }
 
+type DateRange = { from: Date; to?: Date } | undefined
+
 export function ShareLearningsDialog({ userId }: ShareLearningsDialogProps) {
   const [open, setOpen] = useState(false)
-  const [date, setDate] = useState<Date>(new Date())
+  const [dateRange, setDateRange] = useState<DateRange>(() => ({
+    from: startOfDay(subDays(new Date(), 7))
+  }))
   const [loading, setLoading] = useState(false)
   const [exportType, setExportType] = useState<'csv' | 'summary'>('csv')
   const [prompt, setPrompt] = useState(DEFAULT_PROMPT)
@@ -46,18 +51,18 @@ export function ShareLearningsDialog({ userId }: ShareLearningsDialogProps) {
   const [copied, setCopied] = useState(false)
 
   const handleExport = async () => {
+    if (!dateRange?.from) return
+
     setLoading(true)
     try {
-      // Get start and end of the selected day
-      const startDate = new Date(date)
-      startDate.setHours(0, 0, 0, 0)
-      const endDate = new Date(date)
-      endDate.setHours(23, 59, 59, 999)
+      // Get start and end of the selected days
+      const startDate = startOfDay(dateRange.from)
+      const endDate = dateRange.to ? endOfDay(dateRange.to) : endOfDay(new Date())
 
       const reflections = await getUserReflections(userId)
       const frontendReflections = toFrontendReflections(reflections)
       
-      // Filter reflections for the selected day
+      // Filter reflections for the selected date range
       const filteredReflections = frontendReflections.filter(r => {
         const reflectionDate = r.createdAt
         return reflectionDate >= startDate && reflectionDate <= endDate
@@ -66,7 +71,7 @@ export function ShareLearningsDialog({ userId }: ShareLearningsDialogProps) {
       if (exportType === 'csv') {
         // Generate CSV
         const csvContent = generateCSV(filteredReflections)
-        downloadCSV(csvContent, `learnings-${format(date, 'yyyy-MM-dd')}`)
+        downloadCSV(csvContent, `learnings-${format(startDate, 'yyyy-MM-dd')}-to-${format(endDate, 'yyyy-MM-dd')}`)
         setOpen(false)
       } else {
         // Generate summary
@@ -97,11 +102,11 @@ export function ShareLearningsDialog({ userId }: ShareLearningsDialogProps) {
   }
 
   const handleDownload = () => {
-    if (summary) {
+    if (summary && dateRange?.from && dateRange?.to) {
       const blob = new Blob([summary], { type: 'text/plain;charset=utf-8' })
       const link = document.createElement('a')
       link.href = URL.createObjectURL(blob)
-      link.setAttribute('download', `learnings-summary-${format(date, 'yyyy-MM-dd')}.txt`)
+      link.setAttribute('download', `learnings-summary-${format(dateRange.from, 'yyyy-MM-dd')}-to-${format(dateRange.to, 'yyyy-MM-dd')}.txt`)
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
@@ -115,6 +120,7 @@ export function ShareLearningsDialog({ userId }: ShareLearningsDialogProps) {
       if (!newOpen) {
         setSummary(null)
         setCopied(false)
+        setDateRange(undefined)
       }
     }}>
       <DialogTrigger asChild>
@@ -124,35 +130,61 @@ export function ShareLearningsDialog({ userId }: ShareLearningsDialogProps) {
         <DialogHeader>
           <DialogTitle>Share Your Learnings</DialogTitle>
           <DialogDescription>
-            Export your learnings for a specific date. Choose between raw data (CSV) or an AI-generated summary.
+            Export your learnings for a specific date range. Choose between raw data (CSV) or an AI-generated summary.
           </DialogDescription>
         </DialogHeader>
         
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
-            <Label>Select Date</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "justify-start text-left font-normal",
-                    !date && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {date ? format(date, "PPP") : "Pick a date"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <Calendar
-                  mode="single"
-                  selected={date}
-                  onSelect={(newDate: Date | undefined) => newDate && setDate(newDate)}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
+            <Label>Date Range</Label>
+            <div className="flex items-center gap-2">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "justify-start text-left font-normal",
+                      !dateRange?.from && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {dateRange?.from ? format(dateRange.from, "PPP") : "Start date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    initialFocus
+                    mode="single"
+                    selected={dateRange?.from}
+                    onSelect={(date) => setDateRange(date ? { from: date, to: dateRange?.to || date } : undefined)}
+                  />
+                </PopoverContent>
+              </Popover>
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "justify-start text-left font-normal",
+                      !dateRange?.to && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {dateRange?.to ? format(dateRange.to, "PPP") : "End date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    initialFocus
+                    mode="single"
+                    selected={dateRange?.to}
+                    onSelect={(date) => date && dateRange?.from ? setDateRange({ from: dateRange.from, to: date }) : undefined}
+                    disabled={(date) => date < (dateRange?.from || new Date())}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
           </div>
 
           <div className="grid gap-2">
@@ -224,7 +256,10 @@ export function ShareLearningsDialog({ userId }: ShareLearningsDialogProps) {
           )}
 
           {!summary && (
-            <Button onClick={handleExport} disabled={loading}>
+            <Button 
+              onClick={handleExport} 
+              disabled={loading || !dateRange?.from}
+            >
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -296,13 +331,31 @@ function downloadCSV(content: string, filename: string) {
 }
 
 async function generateSummary(reflections: PushReflection[], promptTemplate: string): Promise<string> {
+  // Format reflections into a readable text that includes commit details
+  const formattedReflections = reflections.map(r => {
+    const commitDetails = r.commits.map(c => 
+      `  - ${c.message} (${c.id.substring(0, 7)})`
+    ).join('\n')
+
+    return `
+Date: ${format(new Date(r.createdAt), 'PPP')}
+Repository: ${r.repositoryName}
+
+Commits:
+${commitDetails}
+
+Your Reflection:
+${r.reflection || 'No reflection written'}
+    `
+  }).join('\n---\n')
+
   const response = await fetch('/api/summary', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({ 
-      reflections,
+      reflections: formattedReflections,
       prompt: promptTemplate
     }),
   })
