@@ -1,7 +1,7 @@
 'use client'
 
 import { format, isToday } from 'date-fns'
-import { MessageSquare, FileText, Pencil, CheckCircle2, Brain, Zap, Trophy, Search, Info } from 'lucide-react'
+import { MessageSquare, FileText, Pencil, CheckCircle2, Brain, Zap, Trophy, Search, Info, ArrowRight } from 'lucide-react'
 import { PushReflection } from '@/types'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -16,6 +16,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import Link from 'next/link'
 
 // Add custom styles for the slow glow animation
 const glowStyles = `
@@ -101,6 +102,60 @@ function getEncouragementMessage(stats: { total: number, completed: number, stre
     "Keep capturing those learning moments! 💭"
   ]
   return messages[Math.floor(Math.random() * messages.length)]
+}
+
+// Add CSV generation function
+function generateCSV(reflections: PushReflection[]): string {
+  const headers = [
+    'Date',
+    'Time',
+    'Repository',
+    'Author',
+    'Total Commits',
+    'Reflection',
+    'Commit Details',
+    'Commit Authors',
+    'Commit Timestamps',
+    'Commit URLs'
+  ]
+
+  const rows = reflections.map(r => {
+    const date = new Date(r.createdAt)
+    return [
+      // Basic info
+      format(date, 'yyyy-MM-dd'),
+      format(date, 'HH:mm:ss'),
+      r.repositoryName,
+      r.commits[0].author.name,
+      r.commits.length.toString(),
+      r.reflection,
+      // Detailed commit info
+      r.commits.map(c => `${c.id.substring(0, 7)}: ${c.message}`).join('\n'),
+      r.commits.map(c => `${c.author.name} <${c.author.email}>`).join('\n'),
+      r.commits.map(c => format(new Date(c.timestamp), 'yyyy-MM-dd HH:mm:ss')).join('\n'),
+      r.commits.map(c => c.url).join('\n')
+    ]
+  })
+
+  return [
+    headers.join(','),
+    ...rows.map(row => row.map(cell => {
+      // Replace newlines with semicolons for better readability in Excel
+      const processedCell = cell.replace(/\n/g, '; ')
+      // Escape quotes and wrap in quotes
+      return `"${processedCell.replace(/"/g, '""')}"`
+    }).join(','))
+  ].join('\n')
+}
+
+function downloadCSV(content: string, filename: string) {
+  const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' })
+  const link = document.createElement('a')
+  link.href = URL.createObjectURL(blob)
+  link.setAttribute('download', `${filename}.csv`)
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
 }
 
 export function ReflectionTimeline({ reflections }: ReflectionTimelineProps) {
@@ -212,6 +267,11 @@ export function ReflectionTimeline({ reflections }: ReflectionTimelineProps) {
     return groups
   }, []).sort((a, b) => b.date.getTime() - a.date.getTime())
 
+  const handleExportCSV = () => {
+    const csvContent = generateCSV(reflections)
+    downloadCSV(csvContent, `reflections-${format(new Date(), 'yyyy-MM-dd')}`)
+  }
+
   return (
     <div className="relative space-y-8">
       {/* Stats Section - Always visible */}
@@ -256,7 +316,7 @@ export function ReflectionTimeline({ reflections }: ReflectionTimelineProps) {
         </p>
       </div>
 
-      {/* Search Section */}
+      {/* Search Section with Export Button */}
       <div className="flex justify-between items-center gap-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -310,6 +370,12 @@ export function ReflectionTimeline({ reflections }: ReflectionTimelineProps) {
                       )}>
                         <span className="text-muted-foreground">in</span>{' '}
                         {reflection.repositoryName}
+                        <span className="text-muted-foreground ml-2">by</span>{' '}
+                        <span className={cn(
+                          reflection.reflection ? "text-blue-400/70" : "text-blue-400"
+                        )}>
+                          {reflection.commits[0].author.name}
+                        </span>
                       </div>
                       <TooltipProvider>
                         <Tooltip>

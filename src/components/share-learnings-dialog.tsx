@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { format, startOfDay, endOfDay, subDays } from 'date-fns'
-import { Calendar as CalendarIcon, Download, Loader2, Copy, Check, ChevronRight } from 'lucide-react'
+import { Calendar as CalendarIcon, Download, Loader2, Copy, Check, ChevronRight, Link, ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
 import {
@@ -123,9 +123,6 @@ export function ShareLearningsDialog({ userId }: ShareLearningsDialogProps) {
         setDateRange(undefined)
       }
     }}>
-      <DialogTrigger asChild>
-        <Button variant="outline">Share Learnings</Button>
-      </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Share Your Learnings</DialogTitle>
