@@ -17,6 +17,8 @@ import { PushReflection } from '@/types'
 import { toFrontendReflections } from '@/lib/utils'
 import { useAuth } from '@/lib/auth-context'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import { Label } from '@/components/ui/label'
 
 const DEFAULT_PROMPT = `Below are my coding reflections and commit messages from a period of time. Please analyze both the reflections and the actual code changes described in commits to provide:
 1. Key themes and patterns in what I've learned and worked on
@@ -37,8 +39,9 @@ export default function ReflectPage() {
   const [summary, setSummary] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
   const [reflections, setReflections] = useState<PushReflection[]>([])
+  const [exportType, setExportType] = useState<'csv' | 'summary'>('summary')
 
-  const handleGenerateSummary = async () => {
+  const handleGenerateOrExport = async () => {
     if (!dateRange?.from || !user) return
 
     setLoading(true)
@@ -58,11 +61,17 @@ export default function ReflectPage() {
 
       setReflections(filteredReflections)
 
-      // Generate summary
-      const result = await generateSummary(filteredReflections, prompt)
-      setSummary(result)
+      if (exportType === 'csv') {
+        // Generate and download CSV
+        const csvContent = generateCSV(filteredReflections)
+        downloadCSV(csvContent, `reflections-${format(startDate, 'yyyy-MM-dd')}-to-${format(endDate, 'yyyy-MM-dd')}`)
+      } else {
+        // Generate summary
+        const result = await generateSummary(filteredReflections, prompt)
+        setSummary(result)
+      }
     } catch (error) {
-      console.error('Error generating summary:', error)
+      console.error('Error processing reflections:', error)
     } finally {
       setLoading(false)
     }
@@ -162,25 +171,54 @@ export default function ReflectPage() {
           </CardContent>
         </Card>
 
-        {/* Analysis Instructions */}
+        {/* Export Format Selection */}
         <Card>
           <CardHeader>
-            <CardTitle>Analysis Instructions</CardTitle>
-            <CardDescription>Customize how you want your reflections to be analyzed</CardDescription>
+            <CardTitle>Export Format</CardTitle>
+            <CardDescription>Choose how you want to export your reflections</CardDescription>
           </CardHeader>
           <CardContent>
-            <Textarea
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              className="min-h-[200px] font-mono text-sm"
-              placeholder="Enter your analysis instructions..."
-            />
+            <RadioGroup
+              defaultValue="summary"
+              value={exportType}
+              onValueChange={(value) => {
+                setExportType(value as 'csv' | 'summary')
+                setSummary(null)
+              }}
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="summary" id="summary" />
+                <Label htmlFor="summary">AI Summary</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="csv" id="csv" />
+                <Label htmlFor="csv">Raw Data (CSV)</Label>
+              </div>
+            </RadioGroup>
           </CardContent>
         </Card>
 
-        {/* Generate Button */}
+        {/* Analysis Instructions - Only show if summary is selected */}
+        {exportType === 'summary' && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Analysis Instructions</CardTitle>
+              <CardDescription>Customize how you want your reflections to be analyzed</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Textarea
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+                className="min-h-[200px] font-mono text-sm"
+                placeholder="Enter your analysis instructions..."
+              />
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Generate/Export Button */}
         <Button 
-          onClick={handleGenerateSummary} 
+          onClick={handleGenerateOrExport} 
           disabled={loading || !dateRange?.from}
           className="w-full"
           size="lg"
@@ -188,15 +226,18 @@ export default function ReflectPage() {
           {loading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Analyzing Reflections...
+              {exportType === 'csv' ? 'Exporting...' : 'Analyzing Reflections...'}
             </>
           ) : (
-            'Generate Learning Summary'
+            <>
+              <Download className="mr-2 h-4 w-4" />
+              {exportType === 'csv' ? 'Export CSV' : 'Generate Learning Summary'}
+            </>
           )}
         </Button>
 
-        {/* Results */}
-        {summary && (
+        {/* Results - Only show for summary */}
+        {summary && exportType === 'summary' && (
           <Card>
             <CardHeader>
               <CardTitle className="flex justify-between items-center">
@@ -280,4 +321,57 @@ ${r.reflection || 'No reflection written'}
 
   const { summary } = await response.json()
   return summary
+}
+
+function generateCSV(reflections: PushReflection[]): string {
+  const headers = [
+    'Date',
+    'Time',
+    'Repository',
+    'Author',
+    'Total Commits',
+    'Reflection',
+    'Commit Details',
+    'Commit Authors',
+    'Commit Timestamps',
+    'Commit URLs'
+  ]
+
+  const rows = reflections.map(r => {
+    const date = new Date(r.createdAt)
+    return [
+      // Basic info
+      format(date, 'yyyy-MM-dd'),
+      format(date, 'HH:mm:ss'),
+      r.repositoryName,
+      r.commits[0].author.name,
+      r.commits.length.toString(),
+      r.reflection,
+      // Detailed commit info
+      r.commits.map(c => `${c.id.substring(0, 7)}: ${c.message}`).join('\n'),
+      r.commits.map(c => `${c.author.name} <${c.author.email}>`).join('\n'),
+      r.commits.map(c => format(new Date(c.timestamp), 'yyyy-MM-dd HH:mm:ss')).join('\n'),
+      r.commits.map(c => c.url).join('\n')
+    ]
+  })
+
+  return [
+    headers.join(','),
+    ...rows.map(row => row.map(cell => {
+      // Replace newlines with semicolons for better readability in Excel
+      const processedCell = cell.replace(/\n/g, '; ')
+      // Escape quotes and wrap in quotes
+      return `"${processedCell.replace(/"/g, '""')}"`
+    }).join(','))
+  ].join('\n')
+}
+
+function downloadCSV(content: string, filename: string) {
+  const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' })
+  const link = document.createElement('a')
+  link.href = URL.createObjectURL(blob)
+  link.setAttribute('download', `${filename}.csv`)
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
 } 
