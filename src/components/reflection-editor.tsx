@@ -49,6 +49,7 @@ export function ReflectionEditor({ reflection, onSave, onCancel }: ReflectionEdi
         placeholder="Write your reflection here..."
         className="min-h-[200px]"
         disabled={loading}
+        autoFocus
       />
       
       {error && (

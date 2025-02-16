@@ -1,13 +1,35 @@
 'use client'
 
 import { format } from 'date-fns'
-import { MessageSquare, FileText, Pencil } from 'lucide-react'
+import { MessageSquare, FileText, Pencil, CheckCircle2 } from 'lucide-react'
 import { PushReflection } from '@/types'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { ReflectionEditor } from '@/components/reflection-editor'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { updateReflection } from '@/lib/services/reflection'
+
+// Add custom styles for the slow glow animation
+const glowStyles = `
+  @keyframes slowGlow {
+    0% {
+      border-color: rgba(255, 255, 255, 0.2);
+      box-shadow: 0 0 15px rgba(168, 85, 247, 0.1);
+    }
+    50% {
+      border-color: rgba(255, 255, 255, 0.4);
+      box-shadow: 0 0 20px rgba(168, 85, 247, 0.2);
+    }
+    100% {
+      border-color: rgba(255, 255, 255, 0.2);
+      box-shadow: 0 0 15px rgba(168, 85, 247, 0.1);
+    }
+  }
+
+  .glow-effect {
+    animation: slowGlow 3s ease-in-out infinite;
+  }
+`
 
 interface ReflectionTimelineProps {
   reflections: PushReflection[]
@@ -18,6 +40,38 @@ export function ReflectionTimeline({ reflections }: ReflectionTimelineProps) {
 
   // Find the most recent unreflected push
   const mostRecentUnreflectedPush = reflections.find(r => !r.reflection)
+
+  // Auto-open editor for new pushes
+  useEffect(() => {
+    if (mostRecentUnreflectedPush && !editingId) {
+      setEditingId(mostRecentUnreflectedPush.id)
+    }
+  }, [mostRecentUnreflectedPush?.id])
+
+  // Add keyboard shortcut
+  useEffect(() => {
+    const handleKeyPress = (event: KeyboardEvent) => {
+      // Check if space is pressed and we have an unreflected push
+      if (event.code === 'Space' && mostRecentUnreflectedPush && !editingId) {
+        // Don't trigger if user is typing in an input or textarea
+        if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
+          return
+        }
+        event.preventDefault() // Prevent page scroll
+        setEditingId(mostRecentUnreflectedPush.id)
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyPress)
+    return () => window.removeEventListener('keydown', handleKeyPress)
+  }, [mostRecentUnreflectedPush, editingId])
+
+  // Add the styles to the document
+  if (typeof document !== 'undefined') {
+    const style = document.createElement('style')
+    style.textContent = glowStyles
+    document.head.appendChild(style)
+  }
 
   const handleSaveReflection = async (reflection: PushReflection) => {
     try {
@@ -61,9 +115,10 @@ export function ReflectionTimeline({ reflections }: ReflectionTimelineProps) {
               <div
                 key={reflection.id}
                 className={cn(
-                  "p-6 rounded-lg bg-gradient-to-r from-purple-500/5 to-blue-500/5 border border-purple-500/20 transition-all duration-500",
-                  mostRecentUnreflectedPush?.id === reflection.id && !reflection.reflection && 
-                  "animate-pulse border-purple-500/40 shadow-[0_0_15px_rgba(168,85,247,0.15)] bg-gradient-to-r from-purple-500/10 to-blue-500/10"
+                  "p-6 rounded-lg bg-gradient-to-r from-purple-500/5 to-blue-500/5 border border-white/20 transition-all duration-1000",
+                  mostRecentUnreflectedPush?.id === reflection.id && !reflection.reflection && [
+                    "glow-effect bg-gradient-to-r from-purple-500/10 to-blue-500/10"
+                  ]
                 )}
               >
                 {/* Header */}
@@ -71,7 +126,9 @@ export function ReflectionTimeline({ reflections }: ReflectionTimelineProps) {
                   <h4 className="text-xl font-semibold text-purple-500">
                     {reflection.repositoryName}
                   </h4>
-                  {!reflection.reflection && (
+                  {reflection.reflection ? (
+                    <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                  ) : (
                     <Button
                       variant="outline"
                       size="sm"
