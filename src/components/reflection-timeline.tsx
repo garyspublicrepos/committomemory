@@ -1,7 +1,7 @@
 'use client'
 
 import { format, isToday } from 'date-fns'
-import { MessageSquare, FileText, Pencil, CheckCircle2, Brain, Zap, Trophy, Search, Info, ArrowRight } from 'lucide-react'
+import { MessageSquare, FileText, Pencil, CheckCircle2, Brain, Zap, Trophy, Search, Info } from 'lucide-react'
 import { PushReflection } from '@/types'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -9,14 +9,12 @@ import { Input } from '@/components/ui/input'
 import { ReflectionEditor } from '@/components/reflection-editor'
 import { useState, useEffect, useMemo } from 'react'
 import { updateReflection } from '@/lib/services/reflection'
-import { useAuth } from '@/lib/auth-context'
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import Link from 'next/link'
 
 // Add custom styles for the slow glow animation
 const glowStyles = `
@@ -104,64 +102,9 @@ function getEncouragementMessage(stats: { total: number, completed: number, stre
   return messages[Math.floor(Math.random() * messages.length)]
 }
 
-// Add CSV generation function
-function generateCSV(reflections: PushReflection[]): string {
-  const headers = [
-    'Date',
-    'Time',
-    'Repository',
-    'Author',
-    'Total Commits',
-    'Reflection',
-    'Commit Details',
-    'Commit Authors',
-    'Commit Timestamps',
-    'Commit URLs'
-  ]
-
-  const rows = reflections.map(r => {
-    const date = new Date(r.createdAt)
-    return [
-      // Basic info
-      format(date, 'yyyy-MM-dd'),
-      format(date, 'HH:mm:ss'),
-      r.repositoryName,
-      r.commits[0].author.name,
-      r.commits.length.toString(),
-      r.reflection,
-      // Detailed commit info
-      r.commits.map(c => `${c.id.substring(0, 7)}: ${c.message}`).join('\n'),
-      r.commits.map(c => `${c.author.name} <${c.author.email}>`).join('\n'),
-      r.commits.map(c => format(new Date(c.timestamp), 'yyyy-MM-dd HH:mm:ss')).join('\n'),
-      r.commits.map(c => c.url).join('\n')
-    ]
-  })
-
-  return [
-    headers.join(','),
-    ...rows.map(row => row.map(cell => {
-      // Replace newlines with semicolons for better readability in Excel
-      const processedCell = cell.replace(/\n/g, '; ')
-      // Escape quotes and wrap in quotes
-      return `"${processedCell.replace(/"/g, '""')}"`
-    }).join(','))
-  ].join('\n')
-}
-
-function downloadCSV(content: string, filename: string) {
-  const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' })
-  const link = document.createElement('a')
-  link.href = URL.createObjectURL(blob)
-  link.setAttribute('download', `${filename}.csv`)
-  document.body.appendChild(link)
-  link.click()
-  document.body.removeChild(link)
-}
-
 export function ReflectionTimeline({ reflections }: ReflectionTimelineProps) {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
-  const { user } = useAuth()
 
   // Calculate daily stats from all reflections (not filtered)
   const todayStats = reflections.reduce((stats, reflection) => {
@@ -181,7 +124,7 @@ export function ReflectionTimeline({ reflections }: ReflectionTimelineProps) {
   // Memoize the encouragement message
   const encouragementMessage = useMemo(() => 
     getEncouragementMessage(todayStats),
-    [todayStats.total, todayStats.completed, todayStats.streak]
+    [todayStats]
   )
 
   // Filter reflections based on search query
@@ -213,7 +156,7 @@ export function ReflectionTimeline({ reflections }: ReflectionTimelineProps) {
     if (mostRecentUnreflectedPush && !editingId) {
       setEditingId(mostRecentUnreflectedPush.id)
     }
-  }, [mostRecentUnreflectedPush?.id])
+  }, [mostRecentUnreflectedPush, editingId])
 
   // Add keyboard shortcut
   useEffect(() => {
@@ -266,11 +209,6 @@ export function ReflectionTimeline({ reflections }: ReflectionTimelineProps) {
     
     return groups
   }, []).sort((a, b) => b.date.getTime() - a.date.getTime())
-
-  const handleExportCSV = () => {
-    const csvContent = generateCSV(reflections)
-    downloadCSV(csvContent, `reflections-${format(new Date(), 'yyyy-MM-dd')}`)
-  }
 
   return (
     <div className="relative space-y-8">

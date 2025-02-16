@@ -52,6 +52,25 @@ export async function POST(request: Request) {
           pushPayload.commits
         )
 
+        // Send push notification
+        try {
+          await fetch('/api/push/send', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              userId: webhook.userId,
+              title: 'New Code Changes',
+              body: `You have new changes to reflect on in ${pushPayload.repository.name}`,
+              url: `/dashboard#${reflectionId}`
+            }),
+          })
+        } catch (error) {
+          console.error('Error sending push notification:', error)
+          // Continue even if notification fails
+        }
+
         return NextResponse.json({ 
           message: 'Push reflection created successfully',
           reflectionId

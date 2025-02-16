@@ -7,8 +7,6 @@ import {
   getDocs,
   getDoc,
   orderBy,
-  serverTimestamp,
-  FieldValue,
   Timestamp
 } from 'firebase/firestore'
 import { db } from '@/lib/firebase'

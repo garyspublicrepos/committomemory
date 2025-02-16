@@ -4,6 +4,7 @@ import { useAuth } from '@/lib/auth-context'
 import { Button } from '@/components/ui/button'
 import { Github, Settings, ArrowRightLeft } from 'lucide-react'
 import Link from 'next/link'
+import { NotificationToggle } from '@/components/notification-toggle'
 
 export function ClientLayout({ children }: { children: React.ReactNode }) {
   const { user, signInWithGithub, signOut } = useAuth()
@@ -27,6 +28,7 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
           <div className="flex items-center space-x-4">
             {user && (
               <>
+                <NotificationToggle />
                 <Link href="/reflect">
                   <Button
                     variant="ghost"

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { format, startOfDay, endOfDay, subDays } from 'date-fns'
-import { Calendar as CalendarIcon, Download, Loader2, Copy, Check, ChevronRight, Link, ArrowRight } from 'lucide-react'
+import { Calendar as CalendarIcon, Download, Loader2, Copy, Check, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
 import {
@@ -11,7 +11,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog'
 import {
   Popover,
