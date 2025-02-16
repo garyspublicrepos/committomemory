@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
-import { Brain, Sparkles, ArrowRight, Share2 } from "lucide-react"
+import { Brain, Sparkles, ArrowRight, Share2, GitCommit, Clock, Users, Rocket, Bot, Heart } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 
 export default function Home() {
@@ -76,6 +76,93 @@ export default function Home() {
         </Card>
       </div>
 
+      {/* Q&A Section */}
+      <div className="w-full bg-gradient-to-br from-amber-50 via-yellow-50/90 to-orange-50 py-24">
+        <div className="w-full max-w-4xl mx-auto px-4 space-y-12">
+          <h2 className="text-3xl font-bold text-center mb-12 text-gray-900">
+            Common Questions
+          </h2>
+
+          <div className="space-y-8">
+            <div className="space-y-4">
+              <h3 className="text-xl font-semibold text-purple-700 flex items-center gap-2">
+                <GitCommit className="h-5 w-5" />
+                Why not just add learning notes to Git commit messages?
+              </h3>
+              <p className="text-gray-700 leading-relaxed">
+                Commit messages should be concise and focused on what changed. Learning reflections are a different genre 
+                of annotation entirely - they're about personal growth, insights, and deeper understanding. With PushToMemory, 
+                you can write as much as you want about your learning journey without cluttering your commit history.
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <h3 className="text-xl font-semibold text-blue-700 flex items-center gap-2">
+                <Clock className="h-5 w-5" />
+                Why capture learnings right after a push?
+              </h3>
+              <p className="text-gray-700 leading-relaxed">
+                The best time to reflect is when the experience is fresh. While it can be challenging to get developers 
+                to document their learnings regularly, capturing insights immediately after a push is natural and effortless. 
+                The context is still fresh, making it the perfect moment for meaningful reflection.
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <h3 className="text-xl font-semibold text-emerald-700 flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                How does this help team growth?
+              </h3>
+              <p className="text-gray-700 leading-relaxed">
+                PushToMemory transforms individual learnings into collective wisdom. Teams can receive weekly highlight newsletters 
+                showcasing the most valuable insights from their colleagues. All learnings can be exported to shared wikis or 
+                other knowledge bases, ensuring that valuable insights are preserved and shared.
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <h3 className="text-xl font-semibold text-purple-700 flex items-center gap-2">
+                <Rocket className="h-5 w-5" />
+                What's on the roadmap?
+              </h3>
+              <p className="text-gray-700 leading-relaxed">
+                While we're focused on perfecting the core experience, we're exploring integrations with tools like Notion, 
+                Slack, and Telegram. Our priority is making the reflection process as seamless as possible while ensuring 
+                your team's collective knowledge grows with every push.
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <h3 className="text-xl font-semibold text-blue-700 flex items-center gap-2">
+                <Bot className="h-5 w-5" />
+                Why is this especially important in the age of AI?
+              </h3>
+              <p className="text-gray-700 leading-relaxed">
+                As a developer who actively uses AI coding tools, I created PushToMemory out of a deep concern: it's becoming 
+                too easy to generate code without truly understanding it. Many of us, myself included, risk falling into a pattern 
+                of mindlessly generating code, not knowing why it works, or even why we made certain decisions. This tool exists 
+                to put our reflective capacities back in the loop. By consciously pausing to reflect after each push, we protect 
+                ourselves from letting our understanding atrophy. It's not just about documenting what we did - it's about 
+                preserving our ability to think deeply about our code in an age where it's tempting to let AI do the thinking for us.
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <h3 className="text-xl font-semibold text-emerald-700 flex items-center gap-2">
+                <Heart className="h-5 w-5" />
+                Can I contribute to this project?
+              </h3>
+              <p className="text-gray-700 leading-relaxed">
+                Absolutely! PushToMemory is an open source project created by <a href="https://github.com/garysheng" className="text-emerald-600 hover:text-emerald-700 hover:underline">Gary Sheng</a>, 
+                and we welcome contributions from the community. Whether you want to add features, fix bugs, or improve documentation, 
+                visit our <a href="https://github.com/orgs/garyspublicrepos/repositories" className="text-emerald-600 hover:text-emerald-700 hover:underline">GitHub repository</a> to 
+                get started. Together, we can make team learning and knowledge sharing even better!
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Bottom CTA */}
       <div className="w-full bg-gradient-to-r from-purple-500/10 via-blue-500/10 to-purple-500/10 py-24">
         <div className="max-w-3xl mx-auto text-center px-4">
@@ -90,11 +177,10 @@ export default function Home() {
           <Button 
             size="lg" 
             onClick={() => router.push('/setup')}
-            variant="outline"
-            className="border-purple-500/20 hover:border-purple-500/40 hover:bg-purple-500/10"
+            className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-xl md:text-2xl h-16 px-12 shadow-lg hover:shadow-xl transition-all"
           >
-            Get Started
-            <ArrowRight className="ml-2 h-5 w-5" />
+            Get Started Today ✨
+            <ArrowRight className="ml-2 h-6 w-6" />
           </Button>
         </div>
       </div>

@@ -24,7 +24,6 @@ interface StepsProps {
 export function Steps({ children, className }: StepsProps) {
   return (
     <div className={cn("mt-4 relative", className)}>
-      <div className="absolute left-0 top-0 h-full w-px bg-border ml-2 hidden sm:block" />
       <div className="relative">{children}</div>
     </div>
   )
