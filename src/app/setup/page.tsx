@@ -83,7 +83,7 @@ export default function SetupPage() {
         <CardHeader>
           <CardTitle>How It Works</CardTitle>
           <CardDescription>
-            Commit to Memory integrates with your GitHub organization to help your team reflect on their code changes
+            CommitToMemory integrates with your GitHub organization to help your team reflect on their code changes
           </CardDescription>
         </CardHeader>
         <CardContent>

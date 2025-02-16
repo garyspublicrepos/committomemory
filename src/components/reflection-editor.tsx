@@ -47,7 +47,7 @@ export function ReflectionEditor({ reflection, onSave, onCancel }: ReflectionEdi
         value={content}
         onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setContent(e.target.value)}
         placeholder="Write your reflection here..."
-        className="min-h-[200px]"
+        className="min-h-[200px] bg-white/[0.08] text-white placeholder:text-white/50 border-white/20 focus:border-white/30 focus:bg-white/[0.12]"
         disabled={loading}
         autoFocus
       />

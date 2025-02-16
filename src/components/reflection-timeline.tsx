@@ -1,13 +1,21 @@
 'use client'
 
 import { format, isToday } from 'date-fns'
-import { MessageSquare, FileText, Pencil, CheckCircle2, Brain, Zap, Trophy } from 'lucide-react'
+import { MessageSquare, FileText, Pencil, CheckCircle2, Brain, Zap, Trophy, Search, Info } from 'lucide-react'
 import { PushReflection } from '@/types'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { ReflectionEditor } from '@/components/reflection-editor'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { updateReflection } from '@/lib/services/reflection'
+import { useAuth } from '@/lib/auth-context'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 // Add custom styles for the slow glow animation
 const glowStyles = `
@@ -97,8 +105,10 @@ function getEncouragementMessage(stats: { total: number, completed: number, stre
 
 export function ReflectionTimeline({ reflections }: ReflectionTimelineProps) {
   const [editingId, setEditingId] = useState<string | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
+  const { user } = useAuth()
 
-  // Calculate daily stats
+  // Calculate daily stats from all reflections (not filtered)
   const todayStats = reflections.reduce((stats, reflection) => {
     if (isToday(reflection.createdAt)) {
       stats.total++
@@ -113,7 +123,34 @@ export function ReflectionTimeline({ reflections }: ReflectionTimelineProps) {
     return stats
   }, { total: 0, completed: 0, streak: 0, currentStreak: 0 })
 
-  // Find the most recent unreflected push
+  // Memoize the encouragement message
+  const encouragementMessage = useMemo(() => 
+    getEncouragementMessage(todayStats),
+    [todayStats.total, todayStats.completed, todayStats.streak]
+  )
+
+  // Filter reflections based on search query
+  const filteredReflections = reflections.filter(reflection => {
+    if (!searchQuery.trim()) return true
+    
+    const searchLower = searchQuery.toLowerCase()
+    const date = format(reflection.createdAt, 'MMMM d, yyyy').toLowerCase()
+    return (
+      // Search in repository name
+      reflection.repositoryName.toLowerCase().includes(searchLower) ||
+      // Search in commit messages
+      reflection.commits.some(commit => 
+        commit.message.toLowerCase().includes(searchLower)
+      ) ||
+      // Search in reflection content
+      (reflection.reflection && 
+        reflection.reflection.toLowerCase().includes(searchLower)) ||
+      // Search in date
+      date.includes(searchLower)
+    )
+  })
+
+  // Find the most recent unreflected push from all reflections (not filtered)
   const mostRecentUnreflectedPush = reflections.find(r => !r.reflection)
 
   // Auto-open editor for new pushes
@@ -158,7 +195,7 @@ export function ReflectionTimeline({ reflections }: ReflectionTimelineProps) {
   }
 
   // Group reflections by date
-  const groupedReflections = reflections.reduce((groups: { date: Date; reflections: PushReflection[] }[], reflection) => {
+  const groupedReflections = filteredReflections.reduce((groups: { date: Date; reflections: PushReflection[] }[], reflection) => {
     const date = reflection.createdAt
     const existingGroup = groups.find(group => 
       group.date.getFullYear() === date.getFullYear() &&
@@ -177,7 +214,7 @@ export function ReflectionTimeline({ reflections }: ReflectionTimelineProps) {
 
   return (
     <div className="relative space-y-8">
-      {/* Stats Section */}
+      {/* Stats Section - Always visible */}
       <div className="bg-gradient-to-r from-purple-500/10 to-blue-500/10 rounded-lg p-6 border border-white/20">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-2xl font-bold text-purple-400">Today&apos;s Learning Journey</h2>
@@ -215,14 +252,28 @@ export function ReflectionTimeline({ reflections }: ReflectionTimelineProps) {
         </div>
 
         <p className="text-muted-foreground italic">
-          {getEncouragementMessage(todayStats)}
+          {encouragementMessage}
         </p>
+      </div>
+
+      {/* Search Section */}
+      <div className="flex justify-between items-center gap-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            type="text"
+            placeholder="Search reflections..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
+        </div>
       </div>
 
       {groupedReflections.map((group) => (
         <div key={group.date.toISOString()} className="relative">
           {/* Date Header */}
-          <h3 className="text-lg font-semibold mb-4 text-purple-400">
+          <h3 className="text-lg font-semibold mb-4 text-white italic text-center">
             {format(group.date, 'MMMM d, yyyy')}
           </h3>
           
@@ -245,20 +296,89 @@ export function ReflectionTimeline({ reflections }: ReflectionTimelineProps) {
               >
                 {/* Header */}
                 <div className="flex justify-between items-start mb-4">
-                  <h4 className={cn(
-                    "text-xl font-semibold",
-                    reflection.reflection ? "text-purple-500/70" : "text-purple-500"
-                  )}>
-                    {reflection.repositoryName}
-                  </h4>
+                  <div className="space-y-2 flex-1">
+                    <h3 className={cn(
+                      "text-xl font-semibold leading-tight",
+                      reflection.reflection ? "text-white/80" : "text-white"
+                    )}>
+                      {reflection.commits[0].message}
+                    </h3>
+                    <div className="flex items-center gap-2">
+                      <div className={cn(
+                        "text-sm",
+                        reflection.reflection ? "text-purple-500/70" : "text-purple-500"
+                      )}>
+                        <span className="text-muted-foreground">in</span>{' '}
+                        {reflection.repositoryName}
+                      </div>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-4 w-4 p-0">
+                              <Info className="h-3 w-3 text-muted-foreground hover:text-purple-400 transition-colors" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent side="right" className="max-w-[300px] space-y-2 p-4 bg-zinc-900/95 border border-white/10">
+                            <div className="space-y-4">
+                              <div>
+                                <p className="font-medium text-sm text-purple-400 mb-1">Repository</p>
+                                <p className="text-sm text-white">{reflection.repositoryName}</p>
+                              </div>
+                              <div>
+                                <p className="font-medium text-sm text-blue-400 mb-1">Push Details</p>
+                                <div className="space-y-1">
+                                  <p className="text-sm text-white">
+                                    <span className="text-white/60">Time:</span>{' '}
+                                    {format(reflection.createdAt, 'PPpp')}
+                                  </p>
+                                  <p className="text-sm text-white">
+                                    <span className="text-white/60">Total Commits:</span>{' '}
+                                    {reflection.commits.length}
+                                  </p>
+                                  <p className="text-sm text-white">
+                                    <span className="text-white/60">Author:</span>{' '}
+                                    {reflection.commits[0].author.name}
+                                  </p>
+                                </div>
+                              </div>
+                              <div>
+                                <p className="font-medium text-sm text-emerald-400 mb-1">Commits</p>
+                                <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                                  {reflection.commits.map(commit => (
+                                    <a 
+                                      key={commit.id}
+                                      href={commit.url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="block text-sm text-white hover:text-purple-400 transition-colors"
+                                    >
+                                      <div className="flex items-start gap-2">
+                                        <code className="text-xs text-purple-400/90 font-mono whitespace-nowrap">
+                                          {commit.id.substring(0, 7)}
+                                        </code>
+                                        <span className="break-words">{commit.message}</span>
+                                      </div>
+                                      <div className="text-xs text-white/50 mt-0.5 pl-[3.5rem]">
+                                        {format(new Date(commit.timestamp), 'MMM d, h:mm a')}
+                                      </div>
+                                    </a>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                  </div>
                   {reflection.reflection ? (
-                    <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                    <CheckCircle2 className="h-5 w-5 text-emerald-500 ml-4 mt-1" />
                   ) : (
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => setEditingId(reflection.id)}
-                      className="border-purple-500/20 hover:border-purple-500/40 hover:bg-purple-500/10"
+                      className="border-purple-500/20 hover:border-purple-500/40 hover:bg-purple-500/10 ml-4"
                     >
                       <Pencil className="h-4 w-4 mr-2 text-purple-500" />
                       Write Reflection
@@ -266,37 +386,46 @@ export function ReflectionTimeline({ reflections }: ReflectionTimelineProps) {
                   )}
                 </div>
 
-                {/* Commits */}
-                <div className="mb-4">
-                  <h5 className={cn(
-                    "font-medium mb-2 flex items-center",
-                    reflection.reflection ? "text-blue-400/70" : "text-blue-400"
-                  )}>
-                    <FileText className="w-4 h-4 mr-2" />
-                    Commits in this Push:
-                  </h5>
-                  <ul className="space-y-2">
-                    {reflection.commits.map(commit => (
-                      <li key={commit.id} className={cn(
-                        "group transition-colors duration-200",
-                        reflection.reflection 
-                          ? "text-muted-foreground/80 hover:text-blue-400/70"
-                          : "text-muted-foreground hover:text-blue-400"
-                      )}>
-                        <code className={cn(
-                          "text-sm font-mono",
+                {/* Commits - Only show additional commits if there are more than one */}
+                {reflection.commits.length > 1 && (
+                  <div className="mb-4">
+                    <h5 className={cn(
+                      "font-medium mb-2 flex items-center",
+                      reflection.reflection ? "text-blue-400/70" : "text-blue-400"
+                    )}>
+                      <FileText className="w-4 h-4 mr-2" />
+                      Additional Commits:
+                    </h5>
+                    <ul className="space-y-2">
+                      {reflection.commits.slice(1).map(commit => (
+                        <li key={commit.id} className={cn(
+                          "group transition-colors duration-200",
                           reflection.reflection 
-                            ? "text-purple-400/70 group-hover:text-purple-500/70"
-                            : "text-purple-400 group-hover:text-purple-500"
+                            ? "text-muted-foreground/80 hover:text-blue-400/70"
+                            : "text-muted-foreground hover:text-blue-400"
                         )}>
-                          {commit.id.substring(0, 7)}
-                        </code>
-                        {' - '}
-                        {commit.message}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                          <a 
+                            href={commit.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center hover:text-purple-400 transition-colors"
+                          >
+                            <code className={cn(
+                              "text-sm font-mono",
+                              reflection.reflection 
+                                ? "text-purple-400/70 group-hover:text-purple-500/70"
+                                : "text-purple-400 group-hover:text-purple-500"
+                            )}>
+                              {commit.id.substring(0, 7)}
+                            </code>
+                            {' - '}
+                            {commit.message}
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
 
                 {/* Reflection */}
                 <div>
