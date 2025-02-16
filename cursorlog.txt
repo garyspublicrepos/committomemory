@@ -1,0 +1,13 @@
+2024-03-19
+- Initialized Next.js 14 project with TypeScript, Tailwind CSS, and ESLint
+- Set up shadcn-ui with dark theme
+- Created initial types for CommitReflection, GithubWebhookPayload, and User
+- Created basic home page with hero section
+- Installed required dependencies for shadcn components (@radix-ui/react-slot, class-variance-authority, clsx, tailwind-merge)
+- Added Button component from shadcn
+- Created webhook API route to handle GitHub push events
+- Implemented GitHub webhook signature verification
+- Created setup guide page with organization connection flow
+- Added Alert and Card components from shadcn
+- Created custom Steps component for setup guide
+- Installed Lucide React for icons 
