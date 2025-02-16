@@ -10,7 +10,7 @@ import {
   Timestamp
 } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
-import { PushReflectionBase } from '@/types'
+import { PushReflectionBase, ReflectionStatus } from '@/types'
 
 interface PushReflectionCreate extends Omit<PushReflectionBase, 'createdAt' | 'updatedAt'> {
   createdAt: Timestamp
@@ -34,6 +34,7 @@ export async function createPushReflection(
     repositoryName,
     commits,
     reflection: '', // Will be filled in when user writes their reflection
+    status: 'pending', // Default status is pending
     createdAt: now,
     updatedAt: now
   }
@@ -48,24 +49,16 @@ export async function createPushReflection(
 
 export async function updateReflection(
   reflectionId: string,
-  reflection: string
+  reflection: string,
+  status: ReflectionStatus = 'completed'
 ): Promise<void> {
-  if (!reflectionId) {
-    throw new Error('Reflection ID is required')
-  }
-
-  // Clean the reflectionId to ensure it's a valid document path
-  const cleanId = reflectionId.replace(/[^a-zA-Z0-9-]/g, '')
-  const docRef = doc(db, 'pushReflections', cleanId)
+  const reflectionRef = doc(db, 'pushReflections', reflectionId)
   
-  await setDoc(
-    docRef,
-    {
-      reflection,
-      updatedAt: Timestamp.fromDate(new Date())
-    },
-    { merge: true }
-  )
+  await setDoc(reflectionRef, {
+    reflection,
+    status,
+    updatedAt: Timestamp.fromDate(new Date())
+  }, { merge: true })
 }
 
 export async function getPushReflection(

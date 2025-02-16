@@ -1,12 +1,12 @@
 'use client'
 
 import { useState, ChangeEvent, useRef, useCallback } from 'react'
-import { Loader2, MessageSquare, Mic } from 'lucide-react'
+import { Loader2, MessageSquare, Mic, XCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { updateReflection } from '@/lib/services/reflection'
 import { cn } from '@/lib/utils'
-import type { PushReflection } from '@/types'
+import type { PushReflection, ReflectionStatus } from '@/types'
 
 interface ReflectionEditorProps {
   reflection: PushReflection
@@ -95,7 +95,7 @@ export function ReflectionEditor({ reflection, onSave, onCancel }: ReflectionEdi
     }
   }, [])
 
-  const handleSave = async () => {
+  const handleSave = async (status: ReflectionStatus) => {
     setLoading(true)
     setError(null)
 
@@ -104,10 +104,15 @@ export function ReflectionEditor({ reflection, onSave, onCancel }: ReflectionEdi
       if (!id) {
         throw new Error('Reflection ID is missing')
       }
-      await updateReflection(id, content)
+
+      // For skipped status, we don't need content
+      const reflectionContent = status === 'skipped' ? '' : content
+
+      await updateReflection(id, reflectionContent, status)
       onSave({
         ...reflection,
-        reflection: content,
+        reflection: reflectionContent,
+        status,
         updatedAt: new Date()
       })
     } catch (error) {
@@ -116,6 +121,10 @@ export function ReflectionEditor({ reflection, onSave, onCancel }: ReflectionEdi
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleSkip = async () => {
+    await handleSave('skipped')
   }
 
   return (
@@ -163,27 +172,39 @@ export function ReflectionEditor({ reflection, onSave, onCancel }: ReflectionEdi
         <p className="text-sm text-red-500">{error}</p>
       )}
       
-      <div className="flex justify-end gap-2">
+      <div className="flex justify-between gap-2">
         <Button
-          variant="outline"
-          onClick={onCancel}
+          variant="ghost"
+          onClick={handleSkip}
           disabled={loading}
+          className="text-muted-foreground hover:text-white"
         >
-          Cancel
+          <XCircle className="w-4 h-4 mr-2" />
+          Skip Reflection
         </Button>
-        <Button
-          onClick={handleSave}
-          disabled={loading || !content.trim()}
-        >
-          {loading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Saving...
-            </>
-          ) : (
-            'Save Reflection'
-          )}
-        </Button>
+
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={onCancel}
+            disabled={loading}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={() => handleSave('completed')}
+            disabled={loading || !content.trim()}
+          >
+            {loading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              'Save Reflection'
+            )}
+          </Button>
+        </div>
       </div>
     </div>
   )

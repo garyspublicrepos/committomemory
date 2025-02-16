@@ -1,7 +1,7 @@
 'use client'
 
 import { format, isToday } from 'date-fns'
-import { MessageSquare, FileText, Pencil, CheckCircle2, Brain, Zap, Trophy, Search, Info } from 'lucide-react'
+import { MessageSquare, FileText, Pencil, CheckCircle2, Brain, Zap, Trophy, Search, Info, XCircle } from 'lucide-react'
 import { PushReflection } from '@/types'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -149,7 +149,7 @@ export function ReflectionTimeline({ reflections }: ReflectionTimelineProps) {
   })
 
   // Find the most recent unreflected push from all reflections (not filtered)
-  const mostRecentUnreflectedPush = reflections.find(r => !r.reflection)
+  const mostRecentUnreflectedPush = reflections.find(r => r.status === 'pending')
 
   // Auto-open editor for new pushes
   useEffect(() => {
@@ -282,8 +282,10 @@ export function ReflectionTimeline({ reflections }: ReflectionTimelineProps) {
                 key={reflection.id}
                 className={cn(
                   "p-6 rounded-lg transition-all duration-1000",
-                  reflection.reflection
-                    ? "bg-gradient-to-r from-purple-500/[0.02] to-blue-500/[0.02] border border-white/10"  // Muted colors for completed reflections
+                  reflection.status === 'completed'
+                    ? "bg-gradient-to-r from-purple-500/[0.02] to-blue-500/[0.02] border border-white/10"  // Completed reflections
+                    : reflection.status === 'skipped'
+                    ? "bg-gradient-to-r from-gray-500/[0.02] to-gray-500/[0.02] border border-white/10"  // Skipped reflections
                     : cn(
                         "bg-gradient-to-r from-purple-500/5 to-blue-500/5 border border-white/20",
                         mostRecentUnreflectedPush?.id === reflection.id && [
@@ -297,20 +299,20 @@ export function ReflectionTimeline({ reflections }: ReflectionTimelineProps) {
                   <div className="space-y-2 flex-1">
                     <h3 className={cn(
                       "text-xl font-semibold leading-tight",
-                      reflection.reflection ? "text-white/80" : "text-white"
+                      reflection.status !== 'pending' ? "text-white/80" : "text-white"
                     )}>
                       {reflection.commits[0].message}
                     </h3>
                     <div className="flex items-center gap-2">
                       <div className={cn(
                         "text-sm",
-                        reflection.reflection ? "text-purple-500/70" : "text-purple-500"
+                        reflection.status !== 'pending' ? "text-purple-500/70" : "text-purple-500"
                       )}>
                         <span className="text-muted-foreground">in</span>{' '}
                         {reflection.repositoryName}
                         <span className="text-muted-foreground ml-2">by</span>{' '}
                         <span className={cn(
-                          reflection.reflection ? "text-blue-400/70" : "text-blue-400"
+                          reflection.status !== 'pending' ? "text-blue-400/70" : "text-blue-400"
                         )}>
                           {reflection.commits[0].author.name}
                         </span>
@@ -410,8 +412,10 @@ export function ReflectionTimeline({ reflections }: ReflectionTimelineProps) {
                       </TooltipProvider>
                     </div>
                   </div>
-                  {reflection.reflection ? (
+                  {reflection.status === 'completed' || (reflection.reflection && reflection.reflection.trim().length > 0) ? (
                     <CheckCircle2 className="h-5 w-5 text-emerald-500 ml-4 mt-1" />
+                  ) : reflection.status === 'skipped' ? (
+                    <XCircle className="h-5 w-5 text-gray-500 ml-4 mt-1" />
                   ) : (
                     <Button
                       variant="outline"
@@ -430,7 +434,7 @@ export function ReflectionTimeline({ reflections }: ReflectionTimelineProps) {
                   <div className="mb-4">
                     <h5 className={cn(
                       "font-medium mb-2 flex items-center",
-                      reflection.reflection ? "text-blue-400/70" : "text-blue-400"
+                      reflection.status !== 'pending' ? "text-blue-400/70" : "text-blue-400"
                     )}>
                       <FileText className="w-4 h-4 mr-2" />
                       Additional Commits:
@@ -439,9 +443,7 @@ export function ReflectionTimeline({ reflections }: ReflectionTimelineProps) {
                       {reflection.commits.slice(1).map(commit => (
                         <li key={commit.id} className={cn(
                           "group transition-colors duration-200",
-                          reflection.reflection 
-                            ? "text-muted-foreground/80 hover:text-blue-400/70"
-                            : "text-muted-foreground hover:text-blue-400"
+                          reflection.status !== 'pending' ? "text-muted-foreground/80 hover:text-blue-400/70" : "text-muted-foreground hover:text-blue-400"
                         )}>
                           <a 
                             href={commit.url}
@@ -451,9 +453,7 @@ export function ReflectionTimeline({ reflections }: ReflectionTimelineProps) {
                           >
                             <code className={cn(
                               "text-sm font-mono",
-                              reflection.reflection 
-                                ? "text-purple-400/70 group-hover:text-purple-500/70"
-                                : "text-purple-400 group-hover:text-purple-500"
+                              reflection.status !== 'pending' ? "text-purple-400/70 group-hover:text-purple-500/70" : "text-purple-400 group-hover:text-purple-500"
                             )}>
                               {commit.id.substring(0, 7)}
                             </code>
@@ -470,7 +470,7 @@ export function ReflectionTimeline({ reflections }: ReflectionTimelineProps) {
                 <div>
                   <h5 className={cn(
                     "font-medium mb-2 flex items-center",
-                    reflection.reflection ? "text-emerald-400/70" : "text-emerald-400"
+                    reflection.status !== 'pending' ? "text-emerald-400/70" : "text-emerald-400"
                   )}>
                   </h5>
                   {editingId === reflection.id ? (
@@ -481,9 +481,11 @@ export function ReflectionTimeline({ reflections }: ReflectionTimelineProps) {
                     />
                   ) : (
                     <p className={cn(
-                      reflection.reflection ? "text-muted-foreground/80" : "text-muted-foreground"
+                      reflection.status !== 'pending' ? "text-muted-foreground/80" : "text-muted-foreground"
                     )}>
-                      {reflection.reflection || 'No reflection written yet'}
+                      {reflection.status === 'skipped' 
+                        ? 'Skipped' 
+                        : (reflection.reflection || 'No reflection written yet')}
                     </p>
                   )}
                 </div>

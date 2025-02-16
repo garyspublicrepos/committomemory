@@ -1,5 +1,7 @@
 import { Timestamp } from 'firebase/firestore'
 
+export type ReflectionStatus = 'pending' | 'completed' | 'skipped'
+
 // Backend Types
 export interface PushReflectionBase {
   id: string
@@ -19,6 +21,7 @@ export interface PushReflectionBase {
     removed: string[]
   }>
   reflection: string
+  status: ReflectionStatus
   createdAt: Timestamp
   updatedAt: Timestamp
 }
