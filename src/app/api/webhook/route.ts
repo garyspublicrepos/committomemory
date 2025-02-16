@@ -54,7 +54,8 @@ export async function POST(request: Request) {
 
         // Send push notification
         try {
-          await fetch('/api/push/send', {
+          const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+          const response = await fetch(`${baseUrl}/api/push/send`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -66,6 +67,17 @@ export async function POST(request: Request) {
               url: `/dashboard#${reflectionId}`
             }),
           })
+          
+          if (!response.ok) {
+            const errorData = await response.json()
+            console.error('Push notification failed:', {
+              status: response.status,
+              statusText: response.statusText,
+              error: errorData
+            })
+          } else {
+            console.log('Push notification sent successfully')
+          }
         } catch (error) {
           console.error('Error sending push notification:', error)
           // Continue even if notification fails
