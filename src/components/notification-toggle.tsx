@@ -21,11 +21,20 @@ export function NotificationToggle() {
         return
       }
 
+      // Wait for service worker registration
       const registration = await navigator.serviceWorker.ready
+      console.log('Service worker ready:', registration)
+
       const existingSubscription = await registration.pushManager.getSubscription()
+      console.log('Existing subscription:', existingSubscription)
       setSubscription(existingSubscription)
     } catch (error) {
       console.error('Error checking subscription:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to check notification status',
+        variant: 'destructive'
+      })
     }
   }
 
@@ -42,12 +51,14 @@ export function NotificationToggle() {
         return
       }
 
-      // Register service worker if not already registered
-      const registration = await navigator.serviceWorker.register('/sw.js')
-      await navigator.serviceWorker.ready
+      // Wait for service worker registration
+      const registration = await navigator.serviceWorker.ready
+      console.log('Service worker ready for subscription')
 
       // Request notification permission
       const permission = await Notification.requestPermission()
+      console.log('Notification permission:', permission)
+      
       if (permission !== 'granted') {
         toast({
           title: 'Permission Denied',
@@ -57,11 +68,27 @@ export function NotificationToggle() {
         return
       }
 
+      // Get VAPID public key
+      const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
+      if (!vapidPublicKey) {
+        console.error('VAPID public key not found')
+        toast({
+          title: 'Configuration Error',
+          description: 'Push notification setup is incomplete',
+          variant: 'destructive'
+        })
+        return
+      }
+
+      // Convert VAPID key to Uint8Array
+      const convertedVapidKey = urlBase64ToUint8Array(vapidPublicKey)
+
       // Subscribe to push notifications
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
+        applicationServerKey: convertedVapidKey
       })
+      console.log('Push subscription created:', subscription)
 
       // Save subscription to backend
       const response = await fetch('/api/push/subscribe', {
@@ -104,6 +131,7 @@ export function NotificationToggle() {
 
       // Unsubscribe from push notifications
       await subscription.unsubscribe()
+      console.log('Unsubscribed from push notifications')
 
       // Remove subscription from backend
       const response = await fetch('/api/push/subscribe', {
@@ -160,4 +188,20 @@ export function NotificationToggle() {
       {subscription ? 'Disable' : 'Enable'} Notifications
     </Button>
   )
+}
+
+// Helper function to convert VAPID key
+function urlBase64ToUint8Array(base64String: string): Uint8Array {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4)
+  const base64 = (base64String + padding)
+    .replace(/\-/g, '+')
+    .replace(/_/g, '/')
+
+  const rawData = window.atob(base64)
+  const outputArray = new Uint8Array(rawData.length)
+
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i)
+  }
+  return outputArray
 } 
