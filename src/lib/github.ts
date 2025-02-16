@@ -28,7 +28,7 @@ export async function createOrganizationWebhook(orgName: string, accessToken: st
   const webhookSecret = generateWebhookSecret()
   
   // Get the base URL from environment variable or use a default
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.committomemory.dev'
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.pushtomemory.com'
   const webhookUrl = `${baseUrl}/api/webhook`
   
   console.log('Creating webhook with config:', {

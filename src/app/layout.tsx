@@ -7,7 +7,7 @@ import { ClientLayout } from "@/components/layouts/client-layout";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "CommitToMemory",
+  title: "PushToMemory",
   description: "Track and reflect on your coding journey",
 };
 
