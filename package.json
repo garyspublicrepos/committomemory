@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@deepgram/sdk": "^3.11.1",
     "@google/generative-ai": "^0.21.0",
     "@radix-ui/react-dialog": "^1.1.6",
     "@radix-ui/react-label": "^2.1.2",
@@ -25,8 +26,10 @@
     "extendable-media-recorder": "^9.2.19",
     "extendable-media-recorder-wav-encoder": "^7.0.123",
     "firebase": "^11.3.1",
+    "firebase-admin": "^13.1.0",
     "lucide-react": "^0.475.0",
     "next": "15.1.7",
+    "openai": "^4.85.1",
     "react": "^19.0.0",
     "react-day-picker": "^8.10.1",
     "react-dom": "^19.0.0",

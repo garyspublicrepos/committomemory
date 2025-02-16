@@ -472,8 +472,6 @@ export function ReflectionTimeline({ reflections }: ReflectionTimelineProps) {
                     "font-medium mb-2 flex items-center",
                     reflection.reflection ? "text-emerald-400/70" : "text-emerald-400"
                   )}>
-                    <MessageSquare className="w-4 h-4 mr-2" />
-                    Your Reflection:
                   </h5>
                   {editingId === reflection.id ? (
                     <ReflectionEditor

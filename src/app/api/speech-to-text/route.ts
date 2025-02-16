@@ -1,52 +1,75 @@
 import { NextResponse } from 'next/server'
+import OpenAI from 'openai'
+
+export const maxDuration = 300 // 5 minutes
+
+interface OpenAIError {
+  message: string
+  response?: {
+    data?: unknown
+  }
+}
 
 export async function POST(request: Request) {
   try {
+    // Get the audio file and API key from the request
     const formData = await request.formData()
-    const audio = formData.get('audio') as Blob
-    const mimeType = formData.get('mimeType') as string
-
-    if (!audio) {
+    const audioFile = formData.get('audio') as Blob
+    const apiKey = process.env.OPENAI_API_KEY // Changed to use server-side env var
+    
+    if (!audioFile) {
       return NextResponse.json(
         { error: 'No audio file provided' },
         { status: 400 }
       )
     }
 
-    // Get the Deepgram API key from environment variables
-    const apiKey = process.env.DEEPGRAM_API_KEY
     if (!apiKey) {
+      console.error('OpenAI API key not found in environment variables')
       return NextResponse.json(
-        { error: 'Deepgram API key not configured' },
+        { error: 'OpenAI API key not configured' },
         { status: 500 }
       )
     }
 
-    // Convert audio blob to array buffer
-    const arrayBuffer = await audio.arrayBuffer()
+    console.log('Audio file size:', audioFile.size, 'bytes')
+    console.log('Audio file type:', audioFile.type)
 
-    // Send to Deepgram for transcription
-    const response = await fetch('https://api.deepgram.com/v1/listen', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Token ${apiKey}`,
-        'Content-Type': mimeType
-      },
-      body: arrayBuffer
-    })
+    const openai = new OpenAI({ apiKey })
 
-    if (!response.ok) {
-      throw new Error(`Deepgram API error: ${response.statusText}`)
+    // Convert Blob to File
+    const file = new File([audioFile], 'audio.wav', { type: 'audio/wav' })
+
+    try {
+      // Transcribe using OpenAI Whisper
+      const response = await openai.audio.transcriptions.create({
+        file,
+        model: 'whisper-1',
+        language: 'en',
+        response_format: 'json',
+      })
+
+      console.log('Transcription successful')
+      return NextResponse.json({ text: response.text })
+    } catch (openaiError: unknown) {
+      console.error('OpenAI transcription error:', openaiError)
+      const error = openaiError as OpenAIError
+      return NextResponse.json(
+        { 
+          error: error.message || 'OpenAI transcription failed',
+          details: error.response?.data || error
+        },
+        { status: 500 }
+      )
     }
-
-    const data = await response.json()
-    const text = data.results?.channels[0]?.alternatives[0]?.transcript
-
-    return NextResponse.json({ text })
-  } catch (error) {
-    console.error('Error in speech-to-text:', error)
+  } catch (error: unknown) {
+    console.error('Error in speech-to-text API:', error)
+    const err = error as Error
     return NextResponse.json(
-      { error: 'Failed to transcribe audio' },
+      { 
+        error: err.message || 'Failed to transcribe audio',
+        details: err
+      },
       { status: 500 }
     )
   }

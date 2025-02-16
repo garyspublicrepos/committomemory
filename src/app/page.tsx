@@ -127,12 +127,12 @@ export default function Home() {
             <div className="space-y-4">
               <h3 className="text-xl font-semibold text-purple-700 flex items-center gap-2">
                 <Rocket className="h-5 w-5" />
-                What's on the roadmap?
+                What&apos;s on the roadmap?
               </h3>
               <p className="text-gray-700 leading-relaxed">
                 While we&apos;re focused on perfecting the core experience, we&apos;re exploring integrations with tools like Notion, 
                 Slack, and Telegram. Our priority is making the reflection process as seamless as possible while ensuring 
-                your team's collective knowledge grows with every push.
+                your team&apos;s collective knowledge grows with every push.
               </p>
             </div>
 
@@ -146,8 +146,8 @@ export default function Home() {
                 too easy to generate code without truly understanding it. Many of us, myself included, risk falling into a pattern 
                 of mindlessly generating code, not knowing why it works, or even why we made certain decisions. This tool exists 
                 to put our reflective capacities back in the loop. By consciously pausing to reflect after each push, we protect 
-                ourselves from letting our understanding atrophy. It's not just about documenting what we did - it's about 
-                preserving our ability to think deeply about our code in an age where it's tempting to let AI do the thinking for us.
+                ourselves from letting our understanding atrophy. It&apos;s not just about documenting what we did - it&apos;s about 
+                preserving our ability to think deeply about our code in an age where it&apos;s tempting to let AI do the thinking for us.
               </p>
             </div>
 
