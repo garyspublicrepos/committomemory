@@ -14,6 +14,9 @@ export interface PushReflectionBase {
       name: string
       email: string
     }
+    added: string[]
+    modified: string[]
+    removed: string[]
   }>
   reflection: string
   createdAt: Timestamp
@@ -34,6 +37,10 @@ export interface OrganizationWebhookBase {
 export interface PushReflection extends Omit<PushReflectionBase, 'createdAt' | 'updatedAt'> {
   createdAt: Date
   updatedAt: Date
+  added: string[]
+  modified: string[]
+  removed: string[]
+  distinct: boolean
 }
 
 export interface OrganizationWebhook extends Omit<OrganizationWebhookBase, 'createdAt' | 'updatedAt'> {
@@ -63,6 +70,9 @@ export interface GithubWebhookPayload {
       name: string
       email: string
     }
+    added: string[]
+    modified: string[]
+    removed: string[]
   }>
 }
 

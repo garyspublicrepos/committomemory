@@ -369,6 +369,41 @@ export function ReflectionTimeline({ reflections }: ReflectionTimelineProps) {
                                   ))}
                                 </div>
                               </div>
+                              <div>
+                                <p className="font-medium text-sm text-yellow-400 mb-1">Files Changed</p>
+                                <div className="space-y-4 max-h-[200px] overflow-y-auto">
+                                  {reflection.added?.length > 0 && (
+                                    <div>
+                                      <p className="text-xs text-green-400 mb-1">Added</p>
+                                      {reflection.added.map((file, index) => (
+                                        <div key={`added-${index}`} className="text-sm text-white/80 pl-2">
+                                          {file}
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+                                  {reflection.modified?.length > 0 && (
+                                    <div>
+                                      <p className="text-xs text-blue-400 mb-1">Modified</p>
+                                      {reflection.modified.map((file, index) => (
+                                        <div key={`modified-${index}`} className="text-sm text-white/80 pl-2">
+                                          {file}
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+                                  {reflection.removed?.length > 0 && (
+                                    <div>
+                                      <p className="text-xs text-red-400 mb-1">Removed</p>
+                                      {reflection.removed.map((file, index) => (
+                                        <div key={`removed-${index}`} className="text-sm text-white/80 pl-2">
+                                          {file}
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
                             </div>
                           </TooltipContent>
                         </Tooltip>

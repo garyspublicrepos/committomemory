@@ -67,7 +67,7 @@ export default function Home() {
               Collective Growth
             </h3>
             <p className="text-muted-foreground">
-              Build a rich knowledge base that elevates your entire team. Learn from each other's experiences and insights.
+              Build a rich knowledge base that elevates your entire team. Learn from each other&apos;s experiences and insights.
             </p>
           </CardContent>
         </Card>
@@ -77,11 +77,11 @@ export default function Home() {
       <div className="w-full bg-gradient-to-r from-purple-500/10 via-blue-500/10 to-purple-500/10 py-24">
         <div className="max-w-3xl mx-auto text-center px-4">
           <h2 className="text-3xl font-bold mb-6">
-            Elevate Your Team's Learning Culture
+            Elevate Your Team&apos;s Learning Culture
           </h2>
           <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-            In today's fast-paced tech world, individual growth isn't enough. PushToMemory helps your 
-            team build a shared knowledge base, turning every developer's insights into collective wisdom 
+            In today&apos;s fast-paced tech world, individual growth isn&apos;t enough. PushToMemory helps your 
+            team build a shared knowledge base, turning every developer&apos;s insights into collective wisdom 
             that drives your organization forward.
           </p>
           <Button 

@@ -7,11 +7,26 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function toFrontendReflection(reflection: PushReflectionBase): PushReflection {
+  // Aggregate file changes from all commits
+  const added = new Set<string>()
+  const modified = new Set<string>()
+  const removed = new Set<string>()
+
+  reflection.commits.forEach(commit => {
+    commit.added?.forEach(file => added.add(file))
+    commit.modified?.forEach(file => modified.add(file))
+    commit.removed?.forEach(file => removed.add(file))
+  })
+
   return {
     ...reflection,
     id: reflection.id,
     createdAt: reflection.createdAt.toDate(),
-    updatedAt: reflection.updatedAt.toDate()
+    updatedAt: reflection.updatedAt.toDate(),
+    added: Array.from(added),
+    modified: Array.from(modified),
+    removed: Array.from(removed),
+    distinct: true
   }
 }
 
