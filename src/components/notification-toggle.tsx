@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Bell, BellOff, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/hooks/use-toast'
@@ -10,11 +10,7 @@ export function NotificationToggle() {
   const { toast } = useToast()
   const { user } = useAuth()
 
-  useEffect(() => {
-    checkSubscription()
-  }, [])
-
-  const checkSubscription = async () => {
+  const checkSubscription = useCallback(async () => {
     try {
       if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
         console.log('Push notifications not supported')
@@ -36,7 +32,11 @@ export function NotificationToggle() {
         variant: 'destructive'
       })
     }
-  }
+  }, [toast])
+
+  useEffect(() => {
+    checkSubscription()
+  }, [checkSubscription])
 
   const subscribe = async () => {
     try {

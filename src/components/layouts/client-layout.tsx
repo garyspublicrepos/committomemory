@@ -4,6 +4,7 @@ import { useAuth } from '@/lib/auth-context'
 import { Button } from '@/components/ui/button'
 import { Github, Settings, ArrowRightLeft, Menu } from 'lucide-react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { NotificationToggle } from '@/components/notification-toggle'
 import {
   Sheet,
@@ -66,7 +67,7 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
               href="/dashboard" 
               className="flex items-center gap-2 hover:opacity-80 transition-opacity"
             >
-              <img src="/logo.png" alt="PushToMemory Logo" className="h-8 w-8 rounded-full" />
+              <Image src="/logo.png" alt="PushToMemory Logo" width={32} height={32} className="rounded-full" />
               <span className="text-xl font-bold bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text text-transparent">
                 PushToMemory
               </span>

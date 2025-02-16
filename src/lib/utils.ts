@@ -1,6 +1,7 @@
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
 import { PushReflectionBase, PushReflection, OrganizationWebhookBase, OrganizationWebhook } from "@/types"
+import { toast } from "@/hooks/use-toast"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -40,4 +41,26 @@ export function toFrontendWebhook(webhook: OrganizationWebhookBase): Organizatio
 
 export function toFrontendReflections(reflections: PushReflectionBase[]): PushReflection[] {
   return reflections.map(toFrontendReflection)
+}
+
+export const styledToast = {
+  error: (message: string) => {
+    toast({
+      title: "Error",
+      description: message,
+      variant: "destructive"
+    })
+  },
+  success: (message: string) => {
+    toast({
+      title: "Success",
+      description: message
+    })
+  },
+  info: (message: string) => {
+    toast({
+      title: "Info",
+      description: message
+    })
+  }
 }

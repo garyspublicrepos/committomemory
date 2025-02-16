@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
 import { Brain, Sparkles, ArrowRight, Share2, GitCommit, Clock, Users, Rocket, Bot, Heart } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
+import Image from "next/image"
 
 export default function Home() {
   const router = useRouter()
@@ -13,7 +14,7 @@ export default function Home() {
       {/* Hero Section */}
       <div className="w-full max-w-5xl mx-auto py-24 text-center space-y-6">
         <div className="flex justify-center mb-8">
-          <img src="/logo.png" alt="PushToMemory Logo" className="h-24 w-24 rounded-full" />
+          <Image src="/logo.png" alt="PushToMemory Logo" width={96} height={96} className="rounded-full" />
         </div>
         <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-6 bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text text-transparent pb-3">
           Turn Every Git Push into Shared Knowledge
@@ -94,7 +95,7 @@ export default function Home() {
               </h3>
               <p className="text-gray-700 leading-relaxed">
                 Commit messages should be concise and focused on what changed. Learning reflections are a different genre 
-                of annotation entirely - they're about personal growth, insights, and deeper understanding. With PushToMemory, 
+                of annotation entirely - they&apos;re about personal growth, insights, and deeper understanding. With PushToMemory, 
                 you can write as much as you want about your learning journey without cluttering your commit history.
               </p>
             </div>
@@ -129,7 +130,7 @@ export default function Home() {
                 What's on the roadmap?
               </h3>
               <p className="text-gray-700 leading-relaxed">
-                While we're focused on perfecting the core experience, we're exploring integrations with tools like Notion, 
+                While we&apos;re focused on perfecting the core experience, we&apos;re exploring integrations with tools like Notion, 
                 Slack, and Telegram. Our priority is making the reflection process as seamless as possible while ensuring 
                 your team's collective knowledge grows with every push.
               </p>
@@ -141,7 +142,7 @@ export default function Home() {
                 Why is this especially important in the age of AI?
               </h3>
               <p className="text-gray-700 leading-relaxed">
-                As a developer who actively uses AI coding tools like Cursor and Replit, I created PushToMemory out of a deep concern: it's becoming 
+                As a developer who actively uses AI coding tools like Cursor and Replit, I created PushToMemory out of a deep concern: it&apos;s becoming 
                 too easy to generate code without truly understanding it. Many of us, myself included, risk falling into a pattern 
                 of mindlessly generating code, not knowing why it works, or even why we made certain decisions. This tool exists 
                 to put our reflective capacities back in the loop. By consciously pausing to reflect after each push, we protect 
