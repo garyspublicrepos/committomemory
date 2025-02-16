@@ -18,15 +18,18 @@ export default function Home() {
         <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-6 bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text text-transparent pb-3">
           Turn Every Git Push into Shared Knowledge
         </h1>
+        <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-6">
+          In an age where AI makes it easy to generate code without understanding it, we need to be more intentional about learning.
+        </p>
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-12">
-          Build a culture of continuous learning. Transform individual code pushes into collective team knowledge.
+          Build a culture of conscious development. Transform every code push into an opportunity for deeper understanding.
         </p>
         <Button 
           size="lg" 
           onClick={() => router.push('/setup')}
-          className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-base md:text-xl"
+          className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-base md:text-2xl h-12 md:h-16 px-6 md:px-12"
         >
-          Supercharge Your Developers 🦸
+          Build A Learning Organization 📚
           <ArrowRight className="ml-2 h-5 w-5" />
         </Button>
       </div>
@@ -138,7 +141,7 @@ export default function Home() {
                 Why is this especially important in the age of AI?
               </h3>
               <p className="text-gray-700 leading-relaxed">
-                As a developer who actively uses AI coding tools, I created PushToMemory out of a deep concern: it's becoming 
+                As a developer who actively uses AI coding tools like Cursor and Replit, I created PushToMemory out of a deep concern: it's becoming 
                 too easy to generate code without truly understanding it. Many of us, myself included, risk falling into a pattern 
                 of mindlessly generating code, not knowing why it works, or even why we made certain decisions. This tool exists 
                 to put our reflective capacities back in the loop. By consciously pausing to reflect after each push, we protect 
