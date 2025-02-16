@@ -8,14 +8,15 @@ import {
   getDoc,
   orderBy,
   serverTimestamp,
-  FieldValue
+  FieldValue,
+  Timestamp
 } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { PushReflectionBase } from '@/types'
 
-interface PushReflectionCreate extends Omit<PushReflectionBase, 'createdAt' | 'updatedAt' | 'id'> {
-  createdAt: FieldValue
-  updatedAt: FieldValue
+interface PushReflectionCreate extends Omit<PushReflectionBase, 'createdAt' | 'updatedAt'> {
+  createdAt: Timestamp
+  updatedAt: Timestamp
 }
 
 export async function createPushReflection(
@@ -23,16 +24,20 @@ export async function createPushReflection(
   repositoryName: string,
   commits: PushReflectionBase['commits']
 ): Promise<string> {
-  // Generate a unique ID using the first commit's ID
-  const id = `${repositoryName}-${commits[0].id}`
+  // Generate a unique ID using the repository name and first commit's ID
+  // Clean both parts to ensure a valid document path
+  const cleanRepoName = repositoryName.replace(/[^a-zA-Z0-9-]/g, '')
+  const cleanCommitId = commits[0].id.replace(/[^a-zA-Z0-9-]/g, '')
+  const id = `${cleanRepoName}-${cleanCommitId}`
   
-  const reflection: PushReflectionCreate = {
+  const now = Timestamp.fromDate(new Date())
+  const reflection: Omit<PushReflectionCreate, 'id'> = {
     userId,
     repositoryName,
     commits,
     reflection: '', // Will be filled in when user writes their reflection
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp()
+    createdAt: now,
+    updatedAt: now
   }
 
   await setDoc(
@@ -47,11 +52,19 @@ export async function updateReflection(
   reflectionId: string,
   reflection: string
 ): Promise<void> {
+  if (!reflectionId) {
+    throw new Error('Reflection ID is required')
+  }
+
+  // Clean the reflectionId to ensure it's a valid document path
+  const cleanId = reflectionId.replace(/[^a-zA-Z0-9-]/g, '')
+  const docRef = doc(db, 'pushReflections', cleanId)
+  
   await setDoc(
-    doc(db, 'pushReflections', reflectionId),
+    docRef,
     {
       reflection,
-      updatedAt: serverTimestamp()
+      updatedAt: Timestamp.fromDate(new Date())
     },
     { merge: true }
   )
@@ -65,7 +78,10 @@ export async function getPushReflection(
   
   if (!docSnap.exists()) return null
   
-  return docSnap.data() as PushReflectionBase
+  return {
+    ...docSnap.data(),
+    id: docSnap.id
+  } as PushReflectionBase
 }
 
 export async function getUserReflections(
@@ -84,5 +100,8 @@ export async function getUserReflections(
   }
 
   const querySnapshot = await getDocs(q)
-  return querySnapshot.docs.map(doc => doc.data() as PushReflectionBase)
+  return querySnapshot.docs.map(doc => ({
+    ...doc.data(),
+    id: doc.id
+  } as PushReflectionBase))
 } 

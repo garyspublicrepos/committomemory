@@ -107,9 +107,9 @@ export default function SetupPage() {
             <Step title="Automatic Configuration">
               We&apos;ll automatically:
               <ul className="list-disc ml-6 mt-2 space-y-1">
-                <li>Set up the necessary webhook in your organization</li>
-                <li>Configure security settings</li>
-                <li>Start tracking push events</li>
+                <li key="webhook">Set up the necessary webhook in your organization</li>
+                <li key="security">Configure security settings</li>
+                <li key="tracking">Start tracking push events</li>
               </ul>
             </Step>
             

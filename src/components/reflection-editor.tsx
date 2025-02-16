@@ -23,7 +23,11 @@ export function ReflectionEditor({ reflection, onSave, onCancel }: ReflectionEdi
     setError(null)
 
     try {
-      await updateReflection(reflection.id, content)
+      const id = reflection.id
+      if (!id) {
+        throw new Error('Reflection ID is missing')
+      }
+      await updateReflection(id, content)
       onSave({
         ...reflection,
         reflection: content,

@@ -8,6 +8,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Loader2, Pencil } from 'lucide-react'
 import { ReflectionEditor } from '@/components/reflection-editor'
+import { toFrontendReflections } from '@/lib/utils'
+import { ShareLearningsDialog } from '@/components/share-learnings-dialog'
+import { ReflectionTimeline } from '@/components/reflection-timeline'
 
 export default function DashboardPage() {
   const { user } = useAuth()
@@ -15,6 +18,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
+  const [selectedId, setSelectedId] = useState<string | null>(null)
 
   useEffect(() => {
     async function loadReflections() {
@@ -22,13 +26,11 @@ export default function DashboardPage() {
 
       try {
         const data = await getUserReflections(user.uid)
-        // Convert Firestore Timestamps to Dates
-        const formattedReflections = data.map(r => ({
-          ...r,
-          createdAt: r.createdAt.toDate(),
-          updatedAt: r.updatedAt.toDate()
-        }))
-        setReflections(formattedReflections)
+        const frontendReflections = toFrontendReflections(data)
+        setReflections(frontendReflections)
+        if (frontendReflections.length > 0) {
+          setSelectedId(frontendReflections[0].id)
+        }
       } catch (error) {
         console.error('Error loading reflections:', error)
         setError('Failed to load reflections. Please try again.')
@@ -46,6 +48,8 @@ export default function DashboardPage() {
     ))
     setEditingId(null)
   }
+
+  const selectedReflection = reflections.find(r => r.id === selectedId)
 
   if (!user) {
     return (
@@ -78,39 +82,53 @@ export default function DashboardPage() {
   }
 
   return (
-    <main className="container mx-auto py-12 px-4">
-      <h1 className="text-4xl font-bold mb-8">Your Push Reflections</h1>
+    <main className="container max-w-3xl mx-auto py-12 px-4">
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text text-transparent">Your Push Reflections</h1>
+        {user && <ShareLearningsDialog userId={user.uid} />}
+      </div>
       
       {reflections.length === 0 ? (
-        <Card>
+        <Card className="border-purple-500/20">
           <CardHeader>
-            <CardTitle>No Reflections Yet</CardTitle>
+            <CardTitle className="text-purple-500">No Reflections Yet</CardTitle>
             <CardDescription>
               Your push reflections will appear here once you start pushing code to your connected repositories.
             </CardDescription>
           </CardHeader>
         </Card>
       ) : (
-        <div className="grid gap-6">
-          {reflections.map((reflection) => (
-            <Card key={reflection.id}>
+        <div className="space-y-8">
+          {/* Timeline */}
+          <div>
+            <ReflectionTimeline
+              reflections={reflections}
+              selectedId={selectedId}
+              onSelectReflection={setSelectedId}
+            />
+          </div>
+
+          {/* Selected Reflection */}
+          {selectedReflection && (
+            <Card className="border-purple-500/20 bg-gradient-to-br from-purple-500/5 to-blue-500/5">
               <CardHeader>
                 <div className="flex justify-between items-start">
                   <div>
-                    <CardTitle className="text-xl">
-                      {reflection.repositoryName}
+                    <CardTitle className="text-xl text-purple-500">
+                      {selectedReflection.repositoryName}
                     </CardTitle>
-                    <CardDescription>
-                      {new Date(reflection.createdAt).toLocaleDateString()}
+                    <CardDescription className="text-blue-400">
+                      {new Date(selectedReflection.createdAt).toLocaleDateString()}
                     </CardDescription>
                   </div>
-                  {!reflection.reflection && (
+                  {!selectedReflection.reflection && (
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setEditingId(reflection.id)}
+                      onClick={() => setEditingId(selectedReflection.id)}
+                      className="border-purple-500/20 hover:border-purple-500/40 hover:bg-purple-500/10"
                     >
-                      <Pencil className="h-4 w-4 mr-2" />
+                      <Pencil className="h-4 w-4 mr-2 text-purple-500" />
                       Write Reflection
                     </Button>
                   )}
@@ -118,11 +136,11 @@ export default function DashboardPage() {
               </CardHeader>
               <CardContent>
                 <div className="mb-4">
-                  <h3 className="font-medium mb-2">Commits in this Push:</h3>
+                  <h3 className="font-medium mb-2 text-blue-400">Commits in this Push:</h3>
                   <ul className="space-y-2">
-                    {reflection.commits.map(commit => (
-                      <li key={commit.id} className="text-muted-foreground">
-                        <code className="text-sm font-mono">{commit.id.substring(0, 7)}</code>
+                    {selectedReflection.commits.map(commit => (
+                      <li key={commit.id} className="text-muted-foreground group hover:text-blue-400 transition-colors duration-200">
+                        <code className="text-sm font-mono text-purple-400 group-hover:text-purple-500">{commit.id.substring(0, 7)}</code>
                         {' - '}
                         {commit.message}
                       </li>
@@ -130,22 +148,22 @@ export default function DashboardPage() {
                   </ul>
                 </div>
                 <div>
-                  <h3 className="font-medium mb-2">Your Reflection:</h3>
-                  {editingId === reflection.id ? (
+                  <h3 className="font-medium mb-2 text-emerald-400">Your Reflection:</h3>
+                  {editingId === selectedReflection.id ? (
                     <ReflectionEditor
-                      reflection={reflection}
+                      reflection={selectedReflection}
                       onSave={handleSaveReflection}
                       onCancel={() => setEditingId(null)}
                     />
                   ) : (
                     <p className="text-muted-foreground">
-                      {reflection.reflection || 'No reflection written yet'}
+                      {selectedReflection.reflection || 'No reflection written yet'}
                     </p>
                   )}
                 </div>
               </CardContent>
             </Card>
-          ))}
+          )}
         </div>
       )}
     </main>
