@@ -64,9 +64,12 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
           <div className="flex items-center space-x-4">
             <Link 
               href="/dashboard" 
-              className="text-xl font-bold bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text text-transparent hover:opacity-80 transition-opacity"
+              className="flex items-center gap-2 hover:opacity-80 transition-opacity"
             >
-              PushToMemory
+              <img src="/logo.png" alt="PushToMemory Logo" className="h-8 w-8 rounded-full" />
+              <span className="text-xl font-bold bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text text-transparent">
+                PushToMemory
+              </span>
             </Link>
           </div>
 

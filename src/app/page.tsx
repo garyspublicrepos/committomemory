@@ -12,6 +12,9 @@ export default function Home() {
     <main className="min-h-screen flex flex-col items-center px-4">
       {/* Hero Section */}
       <div className="w-full max-w-5xl mx-auto py-24 text-center space-y-6">
+        <div className="flex justify-center mb-8">
+          <img src="/logo.png" alt="PushToMemory Logo" className="h-24 w-24 rounded-full" />
+        </div>
         <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-6 bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text text-transparent pb-3">
           Turn Every Git Push into Shared Knowledge
         </h1>
@@ -21,9 +24,9 @@ export default function Home() {
         <Button 
           size="lg" 
           onClick={() => router.push('/setup')}
-          className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600"
+          className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-base md:text-xl"
         >
-          Start Your Learning Journey
+          Supercharge Your Developers 🦸
           <ArrowRight className="ml-2 h-5 w-5" />
         </Button>
       </div>
