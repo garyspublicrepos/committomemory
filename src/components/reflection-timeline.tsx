@@ -215,7 +215,7 @@ export function ReflectionTimeline({ reflections }: ReflectionTimelineProps) {
       {/* Stats Section - Always visible */}
       <div className="bg-gradient-to-r from-purple-500/10 to-blue-500/10 rounded-lg p-6 border border-white/20">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-bold text-purple-400">Today&apos;s Learning Journey</h2>
+          <h2 className="text-2xl font-bold text-purple-400">Today&apos;s Learning Progress</h2>
           {todayStats.completed > 0 && (
             <Trophy className="h-6 w-6 text-yellow-500" />
           )}

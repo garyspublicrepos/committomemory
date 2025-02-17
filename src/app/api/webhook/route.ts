@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import type { GithubWebhookPayload } from '@/types'
 import { verifyGithubWebhook } from '@/lib/github'
 import { getOrganizationWebhookByName } from '@/lib/services/organization'
+import { getRepositoryWebhookByFullName } from '@/lib/services/repository'
 import { createPushReflection } from '@/lib/services/reflection'
 
 export async function POST(request: Request) {
@@ -12,16 +13,21 @@ export async function POST(request: Request) {
     
     // Get organization name from the payload
     const orgName = payload.organization?.login
-    if (!orgName) {
-      throw new Error('No organization found in webhook payload')
-    }
+    const repoOwner = payload.repository?.owner?.name
+    const repoName = payload.repository?.name
 
     // Get webhook details to verify signature
-    const webhook = await getOrganizationWebhookByName(orgName)
+    let webhook = null
+    if (orgName) {
+      webhook = await getOrganizationWebhookByName(orgName)
+    } else if (repoOwner && repoName) {
+      webhook = await getRepositoryWebhookByFullName(repoOwner, repoName)
+    }
+
     if (!webhook) {
-      console.error('No webhook found:', { orgName, event })
+      console.error('No webhook found:', { orgName, repoOwner, repoName, event })
       return NextResponse.json(
-        { error: 'No webhook found for this organization' },
+        { error: 'No webhook found for this repository/organization' },
         { status: 404 }
       )
     }
@@ -46,11 +52,19 @@ export async function POST(request: Request) {
       
       // Only create a reflection if there are commits
       if (pushPayload.commits && pushPayload.commits.length > 0) {
+        console.log('Creating push reflection with payload:', {
+          userId: webhook.userId,
+          repositoryName: pushPayload.repository.name,
+          commitCount: pushPayload.commits.length
+        })
+        
         const reflectionId = await createPushReflection(
           webhook.userId,
           pushPayload.repository.name,
           pushPayload.commits
         )
+
+        console.log('Push reflection created:', { reflectionId })
 
         // Send push notification
         try {

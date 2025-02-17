@@ -42,6 +42,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       provider.addScope('admin:org_hook')
       provider.addScope('write:org')
       provider.addScope('read:org')
+      // Add scopes for repository webhook management
+      provider.addScope('admin:repo_hook')
+      provider.addScope('repo')
       
       const result = await signInWithPopup(auth, provider)
       const credential = GithubAuthProvider.credentialFromResult(result)

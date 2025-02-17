@@ -26,14 +26,22 @@ export interface PushReflectionBase {
   updatedAt: Timestamp
 }
 
-export interface OrganizationWebhookBase {
+export interface WebhookBase {
   id: string
-  organizationName: string
   webhookId: number
   webhookSecret: string
   userId: string
   createdAt: Timestamp
   updatedAt: Timestamp
+}
+
+export interface OrganizationWebhookBase extends WebhookBase {
+  organizationName: string
+}
+
+export interface RepositoryWebhookBase extends WebhookBase {
+  owner: string
+  repository: string
 }
 
 // Frontend Types
@@ -47,6 +55,11 @@ export interface PushReflection extends Omit<PushReflectionBase, 'createdAt' | '
 }
 
 export interface OrganizationWebhook extends Omit<OrganizationWebhookBase, 'createdAt' | 'updatedAt'> {
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface RepositoryWebhook extends Omit<RepositoryWebhookBase, 'createdAt' | 'updatedAt'> {
   createdAt: Date
   updatedAt: Date
 }

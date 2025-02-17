@@ -39,10 +39,24 @@ export async function createPushReflection(
     updatedAt: now
   }
 
+  console.log('Creating push reflection with data:', {
+    id,
+    userId,
+    repositoryName,
+    commitCount: commits.length,
+    status: reflection.status
+  })
+
   await setDoc(
     doc(db, 'pushReflections', id),
     reflection
   )
+
+  const verifyDoc = await getDoc(doc(db, 'pushReflections', id))
+  console.log('Verified created document:', {
+    exists: verifyDoc.exists(),
+    data: verifyDoc.data()
+  })
 
   return id
 }
