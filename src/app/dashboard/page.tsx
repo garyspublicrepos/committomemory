@@ -8,7 +8,6 @@ import { PushReflection, PushReflectionBase } from '@/types'
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Loader2 } from 'lucide-react'
 import { toFrontendReflections } from '@/lib/utils'
-import { ShareLearningsDialog } from '@/components/share-learnings-dialog'
 import { ReflectionTimeline } from '@/components/reflection-timeline'
 
 export default function DashboardPage() {
@@ -91,10 +90,6 @@ export default function DashboardPage() {
 
   return (
     <main className="container max-w-3xl mx-auto py-12 px-4">
-      <div className="flex justify-end mb-8">
-        {user && <ShareLearningsDialog userId={user.uid} />}
-      </div>
-      
       {reflections.length === 0 ? (
         <Card className="border-purple-500/20">
           <CardHeader>
